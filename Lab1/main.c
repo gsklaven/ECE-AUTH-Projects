@@ -3,7 +3,7 @@
 extern int hashing(const char * string);
 
 int main() {
-    char* string = "Hello 0 1";
+    char* string = "A01";
     
     printf("The lenght of the string is : %d", hashing(string));
 
