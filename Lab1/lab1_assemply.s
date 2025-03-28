@@ -5,7 +5,6 @@
 hashing:
     .fnstart
     mov r1, #0       // r1 = 0, counter (string length)
-	mov r2, r0
 loop0:
     ldrb r3, [r0], #1 // Load byte from r0, increment r0 by 1
     cmp r3, #0        // Check if null terminator
@@ -31,23 +30,38 @@ asciicompare:
 	pop {r0, r1} //restore r0, r1
 	mov r3, r0 //Move string address to r3
 loop1:
-	ldrb r2, [r3], #1 
+    ldrb r2, [r3], #1  // Load next character
     cmp r2, #0       
-    beq end_compare
+    beq end_compare   // If null terminator, exit
 
     cmp r2, #'A'     
-    blt loop1         
-
+    blt next_char      // If less than 'A', skip
     cmp r2, #'Z'      
-    bgt loop1         
+    ble uppercase      // If between 'A' and 'Z', go to uppercase
 
+    cmp r2, #'a'
+    blt next_char      // If less than 'a', skip
+    cmp r2, #'z'
+    ble lowercase      // If between 'a' and 'z', go to lowercase
+
+next_char:
+    b loop1            // Continue loop for next character
+
+uppercase:
     add r0, r2, r2    
     add r4, r4, r0    
-    b loop1        
+    b loop1           // Continue processing next character
+
+lowercase:
+    sub r0, r2, #'a'  // r0 = ASCII - 97
+    mul r0, r0, r0    // r0 = (ASCII - 97)^2
+    add r4, r4, r0    
+    b loop1           // Continue processing next character
+
 end_compare:
     mov r0, r4       
-    pop {lr}   
-    bx lr  
+    pop {lr}         
+    bx lr            
     .fnend
 	
 	
