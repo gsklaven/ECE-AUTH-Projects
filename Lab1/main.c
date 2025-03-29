@@ -3,6 +3,7 @@
 extern int hashing(const char * string);
 extern int modulowith7(const char * string);
 extern int fibonacci(const char * string);
+extern int addhash(const char * string);
 extern int result;
 
 int main() {
@@ -14,6 +15,7 @@ int main() {
 	
 		fibonacci(string);
     printf("Fibonacci result: %d\n", result);
+	printf("The total Hash is : %d \n", addhash(string));
 	
     return 0;
 }
