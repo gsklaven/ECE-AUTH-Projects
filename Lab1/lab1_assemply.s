@@ -36,57 +36,57 @@ asciicompare:
         beq end_compare   // If null terminator, exit
 
         cmp r2, #'0'                                                    //allagh
-		blt next_char
-		cmp r2, #'0'
-		IT le
-		addle r4,#5
-		cmp r2, #'0'
-		ble next_char
-		cmp r2, #'1'
-		IT le
-		addle r4,#12
-		cmp r2, #'1'
-		ble next_char
-		cmp r2, #'2'
-		IT le
-		addle r4,#7
-		cmp r2, #'2'
-		ble next_char
-		cmp r2, #'3'
-		IT le
-		addle r4,#6
-		cmp r2, #'3'
-		ble next_char
-		cmp r2, #'4'
-		IT le
-		addle r4,#4
-		cmp r2, #'4'
-		ble next_char
-		cmp r2, #'5'
-		IT le
-		addle r4,#11
-		cmp r2, #'5'
-		ble next_char
-		cmp r2, #'6'
-		IT le
-		addle r4,#6
-		cmp r2, #'6'
-		ble next_char
-		cmp r2, #'7'
-		IT le
-		addle r4,#3
-		cmp r2, #'7'
-		ble next_char
-		cmp r2, #'8'
-		IT le
-		addle r4,#10
-		cmp r2, #'8'
-		ble next_char
-		cmp r2, #'9'
-		IT le
-		addle r4,#23
-		cmp r2, #'9'
-		ble next_char                                                           //allagh
+	blt next_char
+	cmp r2, #'0'
+	IT le
+	addle r4,#5
+	cmp r2, #'0'
+	ble next_char
+	cmp r2, #'1'
+	IT le
+	addle r4,#12
+	cmp r2, #'1'
+	ble next_char
+	cmp r2, #'2'
+	IT le
+	addle r4,#7
+	cmp r2, #'2'
+	ble next_char
+	cmp r2, #'3'
+	IT le
+	addle r4,#6
+	cmp r2, #'3'
+	ble next_char
+	cmp r2, #'4'
+	IT le
+	addle r4,#4
+	cmp r2, #'4'
+	ble next_char
+	cmp r2, #'5'
+	IT le
+	addle r4,#11
+	cmp r2, #'5'
+	ble next_char
+	cmp r2, #'6'
+	IT le
+	addle r4,#6
+	cmp r2, #'6'
+	ble next_char
+	cmp r2, #'7'
+	IT le
+	addle r4,#3
+	cmp r2, #'7'
+	ble next_char
+	cmp r2, #'8'
+	IT le
+	addle r4,#10
+	cmp r2, #'8'
+	ble next_char
+	cmp r2, #'9'
+	IT le
+	addle r4,#23
+	cmp r2, #'9'
+	ble next_char                                                           //allagh
 
         cmp r2, #'A'     
         blt next_char      // If less than 'A', skip
