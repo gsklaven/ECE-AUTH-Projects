@@ -250,10 +250,8 @@ result3: .word 0
 .type xorfunction, %function
 xorfunction:
     .fnstart
-    push {r0, lr}        
     mov r4, #0            
     mov r3, r0          
-	pop {r0, lr}
 xor_loop:
     ldrb r1, [r3], #1    
     cmp r1, #0          
