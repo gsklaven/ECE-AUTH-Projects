@@ -6,12 +6,24 @@ extern int fibonacci(const char * string);
 extern int addhash(const char * string);
 extern int asciicompare(const char * string);
 extern int numberchange(const char * string);
+extern int xorfunction(const char * string);
 
 extern int result0;
 extern int result1;
 extern int result2;
+extern int result3;
+
+void read(char *buffer, int max_length) {
+ 
+    printf("Enter a string: ");
+    scanf("%s", buffer);
+}
+
 
 int main() {
+		char string0[100];
+    
+    read(string0, sizeof(string0));
     char* string = "A9b3";
 	
     printf("The length of the string is : %d \n", hashing(string));
@@ -27,6 +39,8 @@ int main() {
 		printf("Modulo result is: %d\n", result1);
 		fibonacci(string);
     printf("Fibonacci result: %d\n", result2);
+		xorfunction(string);
+		printf("The bitwise xor of the string is: %d\n", result3);
 	
     return 0;
 }

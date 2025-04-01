@@ -238,3 +238,30 @@ fib_return1:
     pop {lr}
     bx lr
     .fnend
+	
+.section .data
+.global result3
+result3: .word 0
+
+.section .text
+.global xorfunction
+.p2align 2
+
+.type xorfunction, %function
+xorfunction:
+    .fnstart
+    push {r0, lr}        
+    mov r4, #0            
+    mov r3, r0          
+	pop {r0, lr}
+xor_loop:
+    ldrb r1, [r3], #1    
+    cmp r1, #0          
+    beq xor_end           
+    eor r4, r4, r1   
+    b xor_loop           
+xor_end:
+    ldr r1, =result3      
+    str r4, [r1]          
+    bx lr             
+    .fnend
