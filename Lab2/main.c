@@ -9,7 +9,7 @@
 
 #define BUFF_SIZE 128 // Read buffer length
 #define P_LED PA_5
-#define BUTTON_PIN PC_13 //!!!!!
+#define BUTTON_PIN PC_13 //Button input pin
 Queue rx_queue; // Queue for storing received characters
 
 volatile uint32_t current_digit_index = 0; // Index of the current digit being processed
@@ -18,22 +18,25 @@ volatile uint8_t repeat_analysis = 0;          // Flag to repeat analysis when n
 volatile uint8_t new_input_detected = 0;       // Flag to indicate a new input has been detected
 
 char buff[BUFF_SIZE]; // Buffer to store user input
-volatile uint8_t led_locked = 0;             // !!!!!
-volatile uint32_t button_press_count = 0;    // !!!!!
+volatile uint8_t led_locked = 0;             // Lock flag for LED logic
+volatile uint32_t button_press_count = 0;    // Counts button presses
+//  Button interrupt callback
+void button_callback(int status) {
+    if (status & (1 << GET_PIN_INDEX(BUTTON_PIN))) {  // Check if button was pressed
+        button_press_count++;                             // Toggle lock state
+        led_locked ^= 1;                             // Toggle lock state
 
-void button_callback(int status) {   	
-  (void)status; // 
-	button_press_count++;                    // !!!!!
-    led_locked ^= 1;                         // !!!!!
+        uart_print("Interrupt: Button pressed. LED ");  // Report current state
+        if (led_locked)
+            uart_print("locked. Count = ");
+        else
+            uart_print("unlocked. Count = ");
 
-    uart_print("Interrupt: Button pressed. LED ");        // !!!!!
-    if (led_locked) uart_print("locked. Count = ");       // !!!!!
-    else uart_print("unlocked. Count = ");                // !!!!!
-
-    char count_str[10];                                   // !!!!!
-    sprintf(count_str, "%u\r\n", button_press_count);     // !!!!!
-    uart_print(count_str);                                // !!!!!
-}                                                         // !!!!!
+        char count_str[10];
+        sprintf(count_str, "%u\r\n", button_press_count);  // Print count
+        uart_print(count_str);
+    }
+}                                                       
 
 // UART receive interrupt service routine
 void uart_rx_isr(uint8_t rx) {
@@ -86,9 +89,9 @@ void TIM_IRQHandler() {
                 uart_print("Digit ");
                 uart_tx(current_char);
                 uart_print(": ");
-                    if (led_locked) {                                      // !!!!!
-                        uart_print("LED action skipped due to lock\r\n"); // !!!!!
-                    } else {                                               // !!!!! 
+                    if (led_locked) {                                      // LED is locked
+                        uart_print("LED action skipped due to lock\r\n"); 
+                    } else {                                               
                     if (digit % 2 == 0) {
                         // Even digit: LED blink (200ms ON then 200ms OFF)
                         gpio_set(P_LED, 1); // LED ON
@@ -132,9 +135,9 @@ int main() {
     gpio_set(P_LED, 0); // LED OFF initially
     timer_init(500000); // Timer with 0.5 sec interval
     timer_set_callback(TIM_IRQHandler);
-    gpio_set_mode(BUTTON_PIN, Input);                     // !!!!!
-    gpio_set_trigger(BUTTON_PIN, Falling);                // !!!!!
-    gpio_set_callback(BUTTON_PIN, button_callback);       // !!!!!
+    gpio_set_mode(BUTTON_PIN, Input);                     //  Configure button pin as input
+    gpio_set_trigger(BUTTON_PIN, Falling);                // Trigger on falling edge (button press)
+    gpio_set_callback(BUTTON_PIN, button_callback);       // Register callback
     __enable_irq(); // Enable global interrupts
 
     uart_print("\r\n");
