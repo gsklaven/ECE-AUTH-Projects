@@ -23,7 +23,7 @@ volatile uint32_t button_press_count = 0;    // Counts button presses
 //  Button interrupt callback
 void button_callback(int status) {
     if (status & (1 << GET_PIN_INDEX(BUTTON_PIN))) {  // Check if button was pressed
-        button_press_count++;                             // Toggle lock state
+        button_press_count++;                             // Increment the counter that tracks how many times the button has been pressed
         led_locked ^= 1;                             // Toggle lock state
 
         uart_print("Interrupt: Button pressed. LED ");  // Report current state
