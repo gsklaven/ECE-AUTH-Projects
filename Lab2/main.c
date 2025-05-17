@@ -10,19 +10,19 @@
 
 #define BUFF_SIZE 128 // Read buffer length
 #define P_LED PA_5
-#define BUTTON_PIN PC_13 //!!!!!
+#define BUTTON_PIN PC_13
 Queue rx_queue; // Queue for storing received characters
 
 volatile uint32_t current_digit_index = 0; // Index of the current digit being processed
 volatile uint8_t process_digits = 0;         // Flag to start/stop digit processing
 volatile uint8_t repeat_analysis = 0;          // Flag to repeat analysis when number ends with '-'
 volatile uint8_t new_input_detected = 0;       // Flag to indicate a new input has been detected
-volatile uint8_t last_led_state = 0; // ?p????e?e? t?? te?e?ta?a ?at?stas? t?? LED
+volatile uint8_t last_led_state = 0;
 
 
 char buff[BUFF_SIZE]; // Buffer to store user input
-volatile uint8_t led_locked = 0;             // !!!!!
-volatile uint32_t button_press_count = 0;    // !!!!!
+volatile uint8_t led_locked = 0;          
+volatile uint32_t button_press_count = 0;   
 
 void button_callback(int status) {
     button_press_count++;
@@ -40,7 +40,6 @@ void button_callback(int status) {
     sprintf(count_str, "%u\r\n", button_press_count);
     uart_print(count_str);
 }
-                                                         // !!!!!
 
 // UART receive interrupt service routine
 void uart_rx_isr(uint8_t rx) {
@@ -93,9 +92,9 @@ void TIM_IRQHandler() {
                 uart_print("Digit ");
                 uart_tx(current_char);
                 uart_print(": ");
-                    if (led_locked) {                                      // !!!!!
-                        uart_print("LED action skipped due to lock\r\n"); // !!!!!
-                    } else {                                               // !!!!! 
+                    if (led_locked) {                                     
+                        uart_print("LED action skipped due to lock\r\n"); 
+                    } else {                                               
                     if (digit % 2 == 0) {
                         // Even digit: LED blink (200ms ON then 200ms OFF)
                         gpio_set(P_LED, 1); // LED ON
@@ -136,18 +135,15 @@ int main() {
     uart_init(115200);
     uart_set_rx_callback(uart_rx_isr);
     uart_enable();
-		NVIC_SetPriority(USART2_IRQn , 2 );
 	
     gpio_set_mode(P_LED, Output);
     gpio_set(P_LED, 0); // LED OFF initially
     timer_init(500000); // Timer with 0.5 sec interval
     timer_set_callback(TIM_IRQHandler);
-		NVIC_SetPriority( P_LED, 1 );
 
-    gpio_set_mode(BUTTON_PIN, PullUp);                     // !!!!!
-    gpio_set_trigger(BUTTON_PIN, Rising);                // !!!!!
-    gpio_set_callback(BUTTON_PIN, button_callback);       // !!!!!
-		NVIC_SetPriority( BUTTON_PIN, 0 );
+    gpio_set_mode(BUTTON_PIN, PullUp);                     
+    gpio_set_trigger(BUTTON_PIN, Rising);                
+    gpio_set_callback(BUTTON_PIN, button_callback);      
 		
     __enable_irq(); // Enable global interrupts
 
@@ -179,7 +175,7 @@ int main() {
         uart_print("\r\n");
 
         // If no input was provided, restart the loop for new input
-        if (buff_index == 0)
+        if (buff_index == 0) 
             continue;
 
         // Set repeat_analysis flag based on the last character in the input
