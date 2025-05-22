@@ -200,30 +200,41 @@ void timer_callback(void) {
 // === DHT11 reading ===
 uint8_t read_dht11(uint8_t *temp, uint8_t *hum) {
     uint8_t data[5] = {0};
-
     gpio_set_mode(DHT11_PIN, Output);
     gpio_set(DHT11_PIN, 0);
     delay_ms(18);
     gpio_set(DHT11_PIN, 1);
-    delay_us(30);
+    delay_us(20);
     gpio_set_mode(DHT11_PIN, Input);
 
-    if (gpio_get(DHT11_PIN)) return 0;
-    while (!gpio_get(DHT11_PIN));
-    while (gpio_get(DHT11_PIN));
-
+    uint32_t timeout = 10000;
+    while (gpio_get(DHT11_PIN)) {
+        if (--timeout == 0) return 0;
+    }
+    timeout = 10000;
+    while (!gpio_get(DHT11_PIN)) {
+        if (--timeout == 0) return 0;
+    }
+    timeout = 10000;
+    while (gpio_get(DHT11_PIN)) {
+        if (--timeout == 0) return 0;
+    }
     for (int i = 0; i < 40; ++i) {
-        while (!gpio_get(DHT11_PIN));
-        delay_us(30);
+        timeout = 10000;
+        while (!gpio_get(DHT11_PIN)) {
+            if (--timeout == 0) return 0;
+        }
+        delay_us(10);
         if (gpio_get(DHT11_PIN)) {
             data[i / 8] |= (1 << (7 - (i % 8)));
-            while (gpio_get(DHT11_PIN));
+        }
+        timeout = 10000;
+        while (gpio_get(DHT11_PIN)) {
+            if (--timeout == 0) return 0;
         }
     }
-
     uint8_t checksum = data[0] + data[1] + data[2] + data[3];
     if (checksum != data[4]) return 0;
-
     *hum = data[0];
     *temp = data[2];
     return 1;
