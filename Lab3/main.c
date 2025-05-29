@@ -2,12 +2,12 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-
 #include "uart.h"
 #include "queue.h"
 #include "gpio.h"
 #include "timer.h"
 #include "delay.h"
+#include "dht11.h"
 
 // === Definitions ===
 #define BUFF_SIZE 128
@@ -46,13 +46,11 @@ void request_password(void);
 void read_sensor(void);
 void touch_callback(int status);
 void read_line(char *buffer, int max_len);
-uint8_t read_dht11(uint8_t *temp, uint8_t *hum);
-
-// === UART ===
 
 void uart_rx_isr(uint8_t rx) {
     queue_enqueue(&rx_queue, rx);
-    if (rx == '\r') command_ready = 1;
+    if (rx == '\r')
+        command_ready = 1;
 }
 
 void read_line(char *buffer, int max_len) {
@@ -66,7 +64,7 @@ void read_line(char *buffer, int max_len) {
         }
         if (index < max_len - 1) {
             buffer[index++] = ch;
-						char buf[2] = {ch, '\0'};
+            char buf[2] = {ch, '\0'};
             uart_print(buf);
         }
     }
@@ -107,13 +105,14 @@ void process_command(char cmd) {
 
 void request_password() {
     char input[BUFF_SIZE];
+    timer_disable();
     while (1) {
         uart_print("Enter password: ");
         read_line(input, BUFF_SIZE);
-        if (strcmp(input, PASSWORD) == 0) break;
+        if (strcmp(input, PASSWORD) == 0)
+            break;
         uart_print("Wrong password. Try again.\r\n");
     }
-
     uart_print("Access granted.\r\n");
     uart_print("Enter your AEM: ");
     read_line(aem_str, BUFF_SIZE);
@@ -132,9 +131,11 @@ void request_password() {
         "c: Change display mode\r\n"
         "d: Show system status\r\n"
     );
+    timer_init(1000000 * read_interval);
+    timer_set_callback(timer_callback);
+    timer_enable();
 }
 
-// === Touch button interrupt handler ===
 void touch_callback(int status) {
     (void)status;
     touch_count++;
@@ -154,13 +155,13 @@ void touch_callback(int status) {
     }
 }
 
-// === Periodic sensor read ===
 void read_sensor() {
-    uint8_t temp = 0, hum = 0;
-    if (read_dht11(&temp, &hum)) {
-        last_temp = temp;
-        last_hum = hum;
-    } else {
+    float* measurements = getData();
+    if(measurements != NULL){
+        last_hum  = (uint8_t)measurements[0];
+        last_temp = (uint8_t)measurements[1];
+    }
+    else {
         uart_print("DHT11 read error\r\n");
     }
 }
@@ -180,83 +181,45 @@ void timer_callback(void) {
         uart_print(msg);
     }
 
+    if (last_temp > 35 || last_hum > 80) {
+        panic_count++;
+        if (panic_count >= 3) {
+            uart_print("System reset: High readings detected!\r\n");
+            NVIC_SystemReset();
+        }
+    } else {
+        panic_count = 0;
+    }
+
     if (current_mode == MODE_B) {
         if (last_temp > 25 || last_hum > 60) {
             gpio_toggle(LED_PIN);
             safe_count = 0;
-            if (++panic_count >= 3) {
-                uart_print("System reset: High readings detected!\r\n");
-                NVIC_SystemReset();
-            }
         } else {
-            panic_count = 0;
-            if (++safe_count >= 5) {
+            safe_count++;
+            if (safe_count >= 5) {
                 gpio_set(LED_PIN, 0);
             }
         }
     }
 }
 
-// === DHT11 reading ===
-uint8_t read_dht11(uint8_t *temp, uint8_t *hum) {
-    uint8_t data[5] = {0};
-    gpio_set_mode(DHT11_PIN, Output);
-    gpio_set(DHT11_PIN, 0);
-    delay_ms(18);
-    gpio_set(DHT11_PIN, 1);
-    delay_us(20);
-    gpio_set_mode(DHT11_PIN, Input);
-
-    uint32_t timeout = 10000;
-    while (gpio_get(DHT11_PIN)) {
-        if (--timeout == 0) return 0;
-    }
-    timeout = 10000;
-    while (!gpio_get(DHT11_PIN)) {
-        if (--timeout == 0) return 0;
-    }
-    timeout = 10000;
-    while (gpio_get(DHT11_PIN)) {
-        if (--timeout == 0) return 0;
-    }
-    for (int i = 0; i < 40; ++i) {
-        timeout = 10000;
-        while (!gpio_get(DHT11_PIN)) {
-            if (--timeout == 0) return 0;
-        }
-        delay_us(10);
-        if (gpio_get(DHT11_PIN)) {
-            data[i / 8] |= (1 << (7 - (i % 8)));
-        }
-        timeout = 10000;
-        while (gpio_get(DHT11_PIN)) {
-            if (--timeout == 0) return 0;
-        }
-    }
-    uint8_t checksum = data[0] + data[1] + data[2] + data[3];
-    if (checksum != data[4]) return 0;
-    *hum = data[0];
-    *temp = data[2];
-    return 1;
-}
-
-// === Main Function ===
 int main() {
     queue_init(&rx_queue, BUFF_SIZE);
     uart_init(115200);
     uart_set_rx_callback(uart_rx_isr);
     uart_enable();
-
-    gpio_set_mode(LED_PIN, Output);
-    gpio_set(LED_PIN, 0);
-
-    gpio_set_mode(TOUCH_PIN, PullUp);
-    gpio_set_trigger(TOUCH_PIN, Rising);
-    gpio_set_callback(TOUCH_PIN, touch_callback);
-
-    timer_init(1000000 * read_interval);
+	
+    timer_init(1000000);
     timer_set_callback(timer_callback);
     timer_enable();
+
+    gpio_set_mode(LED_PIN, Output);
+    //gpio_set(LED_PIN, 0);
+
+    gpio_set_mode(TOUCH_PIN, PullDown);
+    gpio_set_trigger(TOUCH_PIN, Rising);
+    gpio_set_callback(TOUCH_PIN, touch_callback);
 
     __enable_irq();
 
@@ -274,7 +237,7 @@ int main() {
             }
         }
 
-        __WFI(); // Wait for interrupt - low power
+        __WFI(); // Wait for interrupt - low power mode
     }
 
     return 0;
