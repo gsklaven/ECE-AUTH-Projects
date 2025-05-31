@@ -1,30 +1,33 @@
-#include "dht11.h"
-
+#include "dht11_2.h"
+#define DHT11_PIN PB_10
+#include "uart.h"
 
 void startSignal(){
 	//setting the mode of the pin that corresponds to the DHT11 pin2 to output
-	gpio_set_mode(PC_1, Output);
-	gpio_set(PC_1, 0);
+	gpio_set_mode(DHT11_PIN, Output);
+	gpio_set(DHT11_PIN, 0);
 	delay_ms(18);
-	gpio_set(PC_1, 1);
-	delay_us(40);	
-	
+	gpio_set(DHT11_PIN, 1);
+	delay_us(40);
+
+		uart_print("Initialization start");
+		
 	//setting the pin as input to get the response from the sensor 
-	gpio_set_mode(PC_1, Input);
+	gpio_set_mode(DHT11_PIN, Input);
 	delay_us(160);
 	//waiting the pin to get low to pass to the next procedure 
-	while(gpio_get(PC_1));
+	while(gpio_get(DHT11_PIN));
 }
 
 // function called for the reception of each bit 
 uint8_t dataTransmission(){
-	delay_us(20); // start to transmit 1 bit data 
-	while(!gpio_get(PC_1));//waiting the pin to get high to pass to the next procedure 
+	delay_us(50); // start to transmit 1 bit data 
+	while(!gpio_get(DHT11_PIN));//waiting the pin to get high to pass to the next procedure 
 	
-	delay_us(29); // in order to check the 28 us threshold of the "0" bit 
-	if(!gpio_get(PC_1)) return 0;
+	delay_us(32); // in order to check the 28 us threshold of the "0" bit 
+	if(!gpio_get(DHT11_PIN)) return 0;
 	else { // else we set the output to "1" 
-		delay_us(41); // also add a delay to reach the 70us duration of the "1" bit to keep the balance 
+		delay_us(42);
 		return 1;
 	}
 }
@@ -66,4 +69,3 @@ bool checksum(uint8_t* data){
 		return false;
 	}
 }
-
