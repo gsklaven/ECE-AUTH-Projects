@@ -24,7 +24,7 @@ uint8_t dataTransmission(){
 	delay_us(50); // start to transmit 1 bit data 
 	while(!gpio_get(DHT11_PIN));//waiting the pin to get high to pass to the next procedure 
 	
-	delay_us(32); // in order to check the 28 us threshold of the "0" bit 
+	delay_us(28); // in order to check the 28 us threshold of the "0" bit 
 	if(!gpio_get(DHT11_PIN)) return 0;
 	else { // else we set the output to "1" 
 		delay_us(42);
